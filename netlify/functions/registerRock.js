@@ -1,14 +1,32 @@
 const { MongoClient } = require('mongodb');
 const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri);
+let cachedClient = null;
+let cachedDb = null;
+
+async function connectToDatabase() {
+    if (cachedClient && cachedDb) {
+        return { client: cachedClient, db: cachedDb };
+    }
+
+    const client = await MongoClient.connect(uri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
+
+    const db = client.db('rockdb');
+
+    cachedClient = client;
+    cachedDb = db;
+
+    return { client, db };
+}
 
 exports.handler = async function(event, context) {
     const uuid = event.queryStringParameters.uuid;
 
     try {
-        await client.connect();
-        const database = client.db('rockdb');
-        const rocks = database.collection('rocks');
+        const { db } = await connectToDatabase();
+        const rocks = db.collection('rocks');
 
         const rock = await rocks.findOne({ uuid: uuid });
 
@@ -25,11 +43,10 @@ exports.handler = async function(event, context) {
             };
         }
     } catch (error) {
+        console.error('Error:', error);
         return {
             statusCode: 500,
             body: 'Internal Server Error'
         };
-    } finally {
-        await client.close();
     }
 };

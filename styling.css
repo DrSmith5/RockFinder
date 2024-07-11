@@ -34,11 +34,16 @@ body {
 }
 
 .not-found { /*Might add found class*/
-    color: red;
+    color: #ef233c;
     text-shadow: 0px 0px 1px black;
+}
+
+.found {
+    color: green;
+    text-shadow: 0px 0px 1px #06d6a0;
 }
 
 .rock-img {
     border-radius: 10px;
-    border: 5px white;
+    border: 3px solid white;
 }
